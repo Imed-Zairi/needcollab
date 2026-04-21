@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+
+    <!-- HEADER -->
+    <div class="row g-4 mb-5" data-aos="fade-up">
+        <div class="col-lg-8">
+            <a href="/" class="text-secondary text-decoration-none small mb-3 d-inline-block">
+                <i class="bi bi-arrow-left me-1"></i>Retour aux besoins
+            </a>
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:52px;height:52px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-bag-heart-fill text-white fs-5"></i>
+                </div>
+                <h1 class="text-white fw-bold mb-0">{{ need.title }}</h1>
+            </div>
+            <p class="text-secondary fs-5">{{ need.description }}</p>
+            <div class="d-flex gap-3 flex-wrap">
+                <span class="badge-collab"><i class="bi bi-people-fill me-1"></i>{{ need.collaborators_count }} collaborateur(s)</span>
+                <span class="badge-offer"><i class="bi bi-tag-fill me-1"></i>{{ need.offers|length }} offre(s)</span>
+            </div>
+        </div>
+        <div class="col-lg-4 d-flex align-items-start justify-content-lg-end gap-2 flex-wrap">
+            <form method="POST" action="/needs/{{ need.id }}/join">
+                <button class="btn btn-outline-light px-4">
+                    <i class="bi bi-person-plus-fill me-2"></i>Rejoindre
+                </button>
+            </form>
+            <a href="/needs/{{ need.id }}/offers/create" class="btn btn-primary px-4">
+                <i class="bi bi-tag-fill me-2"></i>Soumettre une offre
+            </a>
+        </div>
+    </div>
+
+    <!-- OFFERS -->
+    <div data-aos="fade-up">
+        <div class="section-title mb-4">Offres <span>disponibles</span></div>
+
+        {% if need.offers %}
+        <div class="row g-4">
+            {% for offer in need.offers %}
+            {% set total = offer.accept_count + offer.reject_count %}
+            {% set accept_pct = ((offer.accept_count / total * 100) | int) if total > 0 else 0 %}
+            {% set reject_pct = ((offer.reject_count / total * 100) | int) if total > 0 else 0 %}
+            <div class="col-md-6" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="nc-card h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="text-white fw-bold mb-1">{{ offer.seller_name }}</h5>
+                            <div class="price-tag">{{ offer.price }} €</div>
+                        </div>
+                        <div style="width:44px;height:44px;background:rgba(34,197,94,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="bi bi-shop" style="color:#22c55e;font-size:1.2rem;"></i>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-4">{{ offer.description }}</p>
+
+                    <!-- VOTE BARS -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span style="color:#22c55e;"><i class="bi bi-check-circle-fill me-1"></i>{{ offer.accept_count }} accepté</span>
+                            <span style="color:#ef4444;"><i class="bi bi-x-circle-fill me-1"></i>{{ offer.reject_count }} rejeté</span>
+                        </div>
+                        <div class="vote-bar mb-1">
+                            <div class="vote-bar-fill-accept" style="width:{{ accept_pct }}%;"></div>
+                        </div>
+                        <div class="vote-bar">
+                            <div class="vote-bar-fill-reject" style="width:{{ reject_pct }}%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- VOTE BUTTONS -->
+                    <div class="d-flex gap-2 mt-3">
+                        <form method="POST" action="/offers/{{ offer.id }}/vote" class="flex-fill">
+                            <input type="hidden" name="need_id" value="{{ need.id }}">
+                            <input type="hidden" name="choice" value="accept">
+                            <button class="btn w-100" style="background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.3);border-radius:10px;font-weight:600;transition:.2s;" onmouseover="this.style.background='rgba(34,197,94,0.2)'" onmouseout="this.style.background='rgba(34,197,94,0.1)'">
+                                <i class="bi bi-hand-thumbs-up-fill me-1"></i>Accepter
+                            </button>
+                        </form>
+                        <form method="POST" action="/offers/{{ offer.id }}/vote" class="flex-fill">
+                            <input type="hidden" name="need_id" value="{{ need.id }}">
+                            <input type="hidden" name="choice" value="reject">
+                            <button class="btn w-100" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:10px;font-weight:600;transition:.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+                                <i class="bi bi-hand-thumbs-down-fill me-1"></i>Rejeter
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5 nc-card" data-aos="fade-up">
+            <i class="bi bi-tag" style="font-size:2.5rem;color:var(--primary);opacity:.5;"></i>
+            <h6 class="text-white mt-3 mb-1">Aucune offre pour l'instant</h6>
+            <p class="text-secondary small mb-4">Soyez le premier vendeur à soumettre une offre.</p>
+            <a href="/needs/{{ need.id }}/offers/create" class="btn btn-primary px-4">
+                <i class="bi bi-tag-fill me-2"></i>Soumettre une offre
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

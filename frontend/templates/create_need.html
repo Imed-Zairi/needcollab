@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5" style="max-width:600px;">
+    <div data-aos="fade-up">
+        <a href="/" class="text-secondary text-decoration-none small mb-4 d-inline-block">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+        <div class="nc-card">
+            <div class="text-center mb-4">
+                <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <i class="bi bi-pencil-square text-white fs-4"></i>
+                </div>
+                <h2 class="text-white fw-bold mb-1">Créer un besoin</h2>
+                <p class="text-secondary small">Décrivez ce que vous recherchez et trouvez des collaborateurs.</p>
+            </div>
+
+            <form method="POST">
+                <div class="mb-4">
+                    <label class="form-label">Titre du besoin</label>
+                    <input name="title" class="form-control" placeholder="Ex: MacBook Pro M3, Canapé 3 places..." required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="4" placeholder="Décrivez précisément le produit, la quantité, les critères importants..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-3 fs-6">
+                    <i class="bi bi-send-fill me-2"></i>Publier le besoin
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

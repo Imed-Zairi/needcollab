@@ -1,2 +1,5 @@
 django
 flask
+djangorestframework
+django-cors-headers
+requests
