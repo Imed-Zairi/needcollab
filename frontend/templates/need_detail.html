@@ -2,7 +2,6 @@
 {% block content %}
 <div class="container py-5">
 
-    <!-- HEADER -->
     <div class="row g-4 mb-5" data-aos="fade-up">
         <div class="col-lg-8">
             <a href="/" class="text-secondary text-decoration-none small mb-3 d-inline-block">
@@ -21,18 +20,23 @@
             </div>
         </div>
         <div class="col-lg-4 d-flex align-items-start justify-content-lg-end gap-2 flex-wrap">
-            <form method="POST" action="/needs/{{ need.id }}/join">
-                <button class="btn btn-outline-light px-4">
-                    <i class="bi bi-person-plus-fill me-2"></i>Rejoindre
-                </button>
-            </form>
-            <a href="/needs/{{ need.id }}/offers/create" class="btn btn-primary px-4">
-                <i class="bi bi-tag-fill me-2"></i>Soumettre une offre
-            </a>
+            {% if session.get('username') %}
+                <form method="POST" action="/needs/{{ need.id }}/join">
+                    <button class="btn btn-outline-light px-4">
+                        <i class="bi bi-person-plus-fill me-2"></i>Rejoindre
+                    </button>
+                </form>
+                <a href="/needs/{{ need.id }}/offers/create" class="btn btn-primary px-4">
+                    <i class="bi bi-tag-fill me-2"></i>Soumettre une offre
+                </a>
+            {% else %}
+                <a href="/login?next={{ request.url }}" class="btn btn-outline-light px-4">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Connexion pour participer
+                </a>
+            {% endif %}
         </div>
     </div>
 
-    <!-- OFFERS -->
     <div data-aos="fade-up">
         <div class="section-title mb-4">Offres <span>disponibles</span></div>
 
@@ -55,7 +59,6 @@
                     </div>
                     <p class="text-secondary small mb-4">{{ offer.description }}</p>
 
-                    <!-- VOTE BARS -->
                     <div class="mb-3">
                         <div class="d-flex justify-content-between small mb-1">
                             <span style="color:#22c55e;"><i class="bi bi-check-circle-fill me-1"></i>{{ offer.accept_count }} accepté</span>
@@ -69,23 +72,28 @@
                         </div>
                     </div>
 
-                    <!-- VOTE BUTTONS -->
+                    {% if session.get('username') %}
                     <div class="d-flex gap-2 mt-3">
                         <form method="POST" action="/offers/{{ offer.id }}/vote" class="flex-fill">
                             <input type="hidden" name="need_id" value="{{ need.id }}">
                             <input type="hidden" name="choice" value="accept">
-                            <button class="btn w-100" style="background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.3);border-radius:10px;font-weight:600;transition:.2s;" onmouseover="this.style.background='rgba(34,197,94,0.2)'" onmouseout="this.style.background='rgba(34,197,94,0.1)'">
+                            <button class="btn w-100" style="background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.3);border-radius:10px;font-weight:600;" onmouseover="this.style.background='rgba(34,197,94,0.2)'" onmouseout="this.style.background='rgba(34,197,94,0.1)'">
                                 <i class="bi bi-hand-thumbs-up-fill me-1"></i>Accepter
                             </button>
                         </form>
                         <form method="POST" action="/offers/{{ offer.id }}/vote" class="flex-fill">
                             <input type="hidden" name="need_id" value="{{ need.id }}">
                             <input type="hidden" name="choice" value="reject">
-                            <button class="btn w-100" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:10px;font-weight:600;transition:.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+                            <button class="btn w-100" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:10px;font-weight:600;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">
                                 <i class="bi bi-hand-thumbs-down-fill me-1"></i>Rejeter
                             </button>
                         </form>
                     </div>
+                    {% else %}
+                    <a href="/login" class="btn btn-outline-light w-100 mt-3" style="border-radius:10px;font-size:0.85rem;">
+                        <i class="bi bi-lock-fill me-2"></i>Connectez-vous pour voter
+                    </a>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -95,9 +103,15 @@
             <i class="bi bi-tag" style="font-size:2.5rem;color:var(--primary);opacity:.5;"></i>
             <h6 class="text-white mt-3 mb-1">Aucune offre pour l'instant</h6>
             <p class="text-secondary small mb-4">Soyez le premier vendeur à soumettre une offre.</p>
+            {% if session.get('username') %}
             <a href="/needs/{{ need.id }}/offers/create" class="btn btn-primary px-4">
                 <i class="bi bi-tag-fill me-2"></i>Soumettre une offre
             </a>
+            {% else %}
+            <a href="/login" class="btn btn-outline-light px-4">
+                <i class="bi bi-lock-fill me-2"></i>Connexion pour soumettre
+            </a>
+            {% endif %}
         </div>
         {% endif %}
     </div>
