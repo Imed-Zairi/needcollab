@@ -17,13 +17,13 @@ Créer un besoin → Rejoindre la collab → Vendeur soumet une offre → Vote c
 
 ## Stack technique
 
-| Couche    | Technologie                        |
-|-----------|------------------------------------|
-| Backend   | Django 5 + Django REST Framework   |
-| Frontend  | Flask 3 + Jinja2                   |
-| Base de données | SQLite (dev)               |
-| Auth      | Token Authentication (DRF)         |
-| UI        | Bootstrap 5 + AOS + Bootstrap Icons|
+| Couche          | Technologie                          |
+|-----------------|--------------------------------------|
+| Frontend        | Django 5 + templates Django          |
+| Backend API     | Flask 3 + Flask-SQLAlchemy           |
+| Base de données | SQLite (dev)                         |
+| Auth            | Token Authentication (maison)        |
+| UI              | Bootstrap 5 + AOS + Bootstrap Icons  |
 
 ---
 
@@ -31,28 +31,28 @@ Créer un besoin → Rejoindre la collab → Vendeur soumet une offre → Vote c
 
 ```
 needcollab/
-├── backend/
-│   ├── api/
-│   │   ├── models.py        # Need, Offer, Vote, Profile
-│   │   ├── serializers.py   # Sérialisation DRF
-│   │   ├── views.py         # Logique API
-│   │   ├── urls.py          # Routes API
-│   │   └── admin.py
-│   └── backend/
-│       ├── settings.py
-│       └── urls.py
-├── frontend/
-│   ├── app.py               # Routes Flask
-│   └── templates/
-│       ├── base.html        # Layout + navbar
-│       ├── index.html       # Landing + liste des besoins
-│       ├── login.html       # Connexion
-│       ├── register.html    # Inscription
-│       ├── profile.html     # Profil utilisateur
-│       ├── edit_profile.html
-│       ├── need_detail.html # Détail besoin + offres + votes
-│       ├── create_need.html
-│       └── create_offer.html
+├── api/                        # Flask — Backend API (port 5000)
+│   ├── app.py                  # Modèles + routes JSON
+│   └── needcollab.db           # Base de données SQLite
+├── web/                        # Django — Frontend (port 8000)
+│   ├── manage.py
+│   ├── backend/
+│   │   ├── settings.py
+│   │   └── urls.py
+│   └── web/
+│       ├── views.py            # Logique frontend (appelle l'API Flask)
+│       ├── urls.py             # Routes Django
+│       └── templates/
+│           ├── base.html       # Layout + navbar
+│           ├── index.html      # Landing + liste des besoins
+│           ├── login.html      # Connexion
+│           ├── register.html   # Inscription
+│           ├── profile.html    # Profil utilisateur
+│           ├── edit_profile.html
+│           ├── need_detail.html  # Détail besoin + offres + votes
+│           ├── create_need.html
+│           ├── edit_need.html
+│           └── create_offer.html
 ├── requirements.txt
 └── venv/
 ```
@@ -67,10 +67,9 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Créer les tables :
+Initialiser la base de données Flask :
 ```bash
-cd backend
-python manage.py migrate
+cd api && python -c "from app import app, db; app.app_context().push(); db.create_all()"
 ```
 
 ---
@@ -80,22 +79,22 @@ python manage.py migrate
 Ouvrir deux terminaux :
 
 ```bash
-# Terminal 1 — Backend Django (port 8000)
+# Terminal 1 — Flask API (port 5000)
 source venv/bin/activate
-cd backend && python manage.py runserver
+cd api && python app.py
 
-# Terminal 2 — Frontend Flask (port 5000)
+# Terminal 2 — Django Frontend (port 8000)
 source venv/bin/activate
-cd frontend && python app.py
+cd web && python manage.py runserver
 ```
 
-Accéder à l'application : **http://localhost:5000**
+Accéder à l'application : **http://localhost:8000**
 
 ---
 
 ## API Reference
 
-Base URL : `http://localhost:8000/api`
+Base URL : `http://localhost:5000/api`
 
 Les routes protégées nécessitent le header :
 ```
@@ -104,10 +103,10 @@ Authorization: Token <token>
 
 ### Authentification
 
-| Méthode | Endpoint            | Auth | Description                              |
-|---------|---------------------|------|------------------------------------------|
-| POST    | `/auth/register/`   | ✗    | Créer un compte                          |
-| POST    | `/auth/login/`      | ✗    | Se connecter, retourne un token          |
+| Méthode | Endpoint            | Auth | Description                     |
+|---------|---------------------|------|---------------------------------|
+| POST    | `/auth/register/`   | ✗    | Créer un compte                 |
+| POST    | `/auth/login/`      | ✗    | Se connecter, retourne un token |
 
 **POST `/auth/register/`**
 ```json
@@ -134,109 +133,44 @@ Authorization: Token <token>
 
 ### Profil
 
-| Méthode | Endpoint               | Auth | Description                        |
-|---------|------------------------|------|------------------------------------|
-| GET     | `/profile/`            | ✓    | Récupérer son profil + stats       |
-| PATCH   | `/profile/update/`     | ✓    | Modifier username, email, bio, location |
-| GET     | `/profile/needs/`      | ✓    | Besoins créés par l'utilisateur    |
-| GET     | `/profile/collabs/`    | ✓    | Besoins rejoints par l'utilisateur |
-
-**GET `/profile/`**
-```json
-// Réponse 200
-{
-  "username": "alice",
-  "email": "alice@mail.com",
-  "bio": "Passionnée de tech",
-  "location": "Paris",
-  "date_joined": "2026-04-21T00:00:00Z",
-  "needs_count": 3,
-  "collabs_count": 5
-}
-```
-
-**PATCH `/profile/update/`**
-```json
-// Body (tous les champs optionnels)
-{ "username": "alice2", "email": "new@mail.com", "bio": "...", "location": "Lyon" }
-```
+| Méthode | Endpoint             | Auth | Description                              |
+|---------|----------------------|------|------------------------------------------|
+| GET     | `/profile/`          | ✓    | Récupérer son profil + stats             |
+| PATCH   | `/profile/update/`   | ✓    | Modifier username, email, bio, location  |
+| GET     | `/profile/needs/`    | ✓    | Besoins créés par l'utilisateur          |
+| GET     | `/profile/collabs/`  | ✓    | Besoins rejoints par l'utilisateur       |
 
 ---
 
 ### Besoins (Needs)
 
-| Méthode | Endpoint              | Auth | Description                          |
-|---------|-----------------------|------|--------------------------------------|
-| GET     | `/needs/`             | ✗    | Lister tous les besoins              |
-| POST    | `/needs/`             | ✓    | Créer un besoin                      |
-| GET     | `/needs/<id>/`        | ✗    | Détail d'un besoin + offres          |
-| POST    | `/needs/<id>/join/`   | ✓    | Rejoindre une collaboration          |
-
-**POST `/needs/`**
-```json
-// Body
-{ "title": "MacBook Pro M3", "description": "Recherche MacBook Pro 14 pouces M3 16Go RAM" }
-
-// Réponse 201
-{
-  "id": 1,
-  "title": "MacBook Pro M3",
-  "description": "...",
-  "creator": "alice",
-  "collaborators_count": 0,
-  "created_at": "2026-04-21T10:00:00Z",
-  "offers": []
-}
-```
-
-**GET `/needs/<id>/`**
-```json
-// Réponse 200
-{
-  "id": 1,
-  "title": "MacBook Pro M3",
-  "description": "...",
-  "creator": "alice",
-  "collaborators_count": 4,
-  "created_at": "2026-04-21T10:00:00Z",
-  "offers": [
-    {
-      "id": 1,
-      "seller_name": "TechStore",
-      "price": "1899.00",
-      "description": "Livraison 48h",
-      "accept_count": 3,
-      "reject_count": 1,
-      "votes": [...]
-    }
-  ]
-}
-```
+| Méthode | Endpoint                  | Auth | Description                      |
+|---------|---------------------------|------|----------------------------------|
+| GET     | `/needs/`                 | ✗    | Lister tous les besoins          |
+| POST    | `/needs/`                 | ✓    | Créer un besoin                  |
+| GET     | `/needs/<id>/`            | ✗    | Détail d'un besoin + offres      |
+| PATCH   | `/needs/<id>/`            | ✓    | Modifier un besoin (créateur)    |
+| DELETE  | `/needs/<id>/`            | ✓    | Supprimer un besoin (créateur)   |
+| POST    | `/needs/<id>/archive/`    | ✓    | Archiver/désarchiver (créateur)  |
+| POST    | `/needs/<id>/join/`       | ✓    | Rejoindre une collaboration      |
 
 ---
 
 ### Offres (Offers)
 
-| Méthode | Endpoint                        | Auth | Description                    |
-|---------|---------------------------------|------|--------------------------------|
-| GET     | `/needs/<id>/offers/`           | ✗    | Lister les offres d'un besoin  |
-| POST    | `/needs/<id>/offers/`           | ✓    | Soumettre une offre            |
-
-**POST `/needs/<id>/offers/`**
-```json
-// Body
-{ "seller_name": "TechStore Paris", "price": "1899.00", "description": "Stock disponible, livraison 48h" }
-```
+| Méthode | Endpoint                  | Auth | Description                    |
+|---------|---------------------------|------|--------------------------------|
+| GET     | `/needs/<id>/offers/`     | ✗    | Lister les offres d'un besoin  |
+| POST    | `/needs/<id>/offers/`     | ✓    | Soumettre une offre            |
 
 ---
 
 ### Votes
 
-| Méthode | Endpoint                    | Auth | Description                         |
-|---------|-----------------------------|------|-------------------------------------|
-| POST    | `/offers/<id>/vote/`        | ✓    | Voter pour/contre une offre         |
+| Méthode | Endpoint               | Auth | Description                  |
+|---------|------------------------|------|------------------------------|
+| POST    | `/offers/<id>/vote/`   | ✓    | Voter pour/contre une offre  |
 
-**POST `/offers/<id>/vote/`**
 ```json
 // Body
 { "choice": "accept" }   // ou "reject"
@@ -254,21 +188,16 @@ Authorization: Token <token>
 - Statistiques globales (besoins actifs, vendeurs, satisfaction)
 - Section "Comment ça fonctionne" en 4 étapes
 - Grille de tous les besoins publiés (accessibles sans connexion)
-- **API utilisée :** `GET /api/needs/`
 
 ### `/register` — Inscription
 - Formulaire : username, email (optionnel), password
-- Redirige vers l'accueil après inscription
-- **API utilisée :** `POST /api/auth/register/`
 
 ### `/login` — Connexion
 - Formulaire : username, password
 - Redirige vers la page demandée (`?next=`) ou l'accueil
-- **API utilisée :** `POST /api/auth/login/`
 
 ### `/needs/create` — Créer un besoin `🔒`
 - Formulaire : titre, description
-- **API utilisée :** `POST /api/needs/`
 
 ### `/needs/<id>` — Détail d'un besoin
 - Informations du besoin (titre, description, nombre de collaborateurs)
@@ -276,23 +205,23 @@ Authorization: Token <token>
 - Bouton "Rejoindre" `🔒`
 - Bouton "Soumettre une offre" `🔒`
 - Boutons de vote accept/reject sur chaque offre `🔒`
-- Sans connexion : affiche les offres en lecture seule avec lien vers login
-- **APIs utilisées :** `GET /api/needs/<id>/`, `POST /api/needs/<id>/join/`, `POST /api/offers/<id>/vote/`
+- Sans connexion : affiche les offres en lecture seule
+
+### `/needs/<id>/edit` — Modifier un besoin `🔒`
+- Formulaire pré-rempli : titre, description
+- Accessible uniquement au créateur du besoin
 
 ### `/needs/<id>/offers/create` — Soumettre une offre `🔒`
 - Formulaire : nom du vendeur, prix, description
-- **API utilisée :** `POST /api/needs/<id>/offers/`
 
 ### `/profile` — Profil utilisateur `🔒`
 - Avatar, username, email, localisation, bio
 - Stats : besoins créés, collaborations rejointes, total activités, date d'inscription
-- Onglet "Mes besoins" : historique des besoins créés
+- Onglet "Mes besoins" : liste avec boutons **Modifier**, **Archiver/Désarchiver**, **Supprimer**
 - Onglet "Mes collaborations" : historique des besoins rejoints
-- **APIs utilisées :** `GET /api/profile/`, `GET /api/profile/needs/`, `GET /api/profile/collabs/`
 
 ### `/profile/edit` — Modifier le profil `🔒`
 - Formulaire pré-rempli : username, email, localisation, bio
-- **API utilisée :** `PATCH /api/profile/update/`
 
 > `🔒` = connexion requise, redirige vers `/login` si non authentifié
 
@@ -301,13 +230,15 @@ Authorization: Token <token>
 ## Modèles de données
 
 ```
-User (Django built-in)
- └── Profile        (bio, location)
+User
+ ├── needs        → [Need]
+ └── joined_needs → [Need]  (collaborateurs)
 
 Need
- ├── creator        → User
- ├── collaborators  → [User]
- └── offers         → [Offer]
-      └── votes     → [Vote]
-                         └── user → User
+ ├── creator      → User
+ ├── collaborators → [User]
+ ├── archived     → Boolean
+ └── offers       → [Offer]
+      └── votes   → [Vote]
+                       └── user → User
 ```

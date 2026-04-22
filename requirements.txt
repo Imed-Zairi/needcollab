@@ -1,5 +1,4 @@
 django
 flask
-djangorestframework
-django-cors-headers
+flask-sqlalchemy
 requests

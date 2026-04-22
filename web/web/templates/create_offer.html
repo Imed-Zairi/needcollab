@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5" style="max-width:600px;">
+    <div data-aos="fade-up">
+        <a href="/needs/{{ need_id }}" class="text-secondary text-decoration-none small mb-4 d-inline-block">
+            <i class="bi bi-arrow-left me-1"></i>Retour au besoin
+        </a>
+        <div class="nc-card">
+            <div class="text-center mb-4">
+                <div style="width:64px;height:64px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <i class="bi bi-tag-fill text-white fs-4"></i>
+                </div>
+                <h2 class="text-white fw-bold mb-1">Soumettre une offre</h2>
+                <p class="text-secondary small">Proposez votre meilleur prix à la communauté.</p>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="form-label">Nom du vendeur / entreprise</label>
+                    <input name="seller_name" class="form-control" placeholder="Ex: TechStore Paris, Amazon..." required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Prix proposé (€)</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background:rgba(255,255,255,0.05);border:1px solid rgba(108,99,255,0.2);color:#888;border-right:none;">€</span>
+                        <input name="price" type="number" step="0.01" class="form-control" style="border-left:none;" placeholder="0.00" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Description de l'offre</label>
+                    <textarea name="description" class="form-control" rows="4" placeholder="Détails de l'offre, conditions, délais de livraison..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-3 fs-6" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
+                    <i class="bi bi-send-fill me-2"></i>Soumettre l'offre
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
